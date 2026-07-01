@@ -1,0 +1,6 @@
+Options -Indexes
+Options -MultiViews
+
+<FilesMatch "\.(env|env\.example|json|lock|gitkeep)$">
+    Require all denied
+</FilesMatch>

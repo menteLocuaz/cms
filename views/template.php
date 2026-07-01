@@ -30,13 +30,13 @@ $fields = array();
 
 $adminTable = CurlController::request($url,$method,$fields);
 
-if($adminTable->status == 404){
+if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status == 404){
 
 	$admin = null;
 
 }else{
 
-	$admin = $adminTable->results[0];
+	$admin = $adminTable->results[0] ?? null;
 	// echo '<pre>'; print_r($admin); echo '</pre>';
 }
 
@@ -404,8 +404,7 @@ if($adminTable->status == 404){
     	Incluimos modal de perfiles
     	=============================================*/
 
-    	include "modules/modals/profile.php"; 
-		require_once "controllers/admins.controller.php";
+    	include "modules/modals/profile.php";
 		$update = new AdminsController();
 	    $update->updateAdmin();
 
@@ -417,7 +416,6 @@ if($adminTable->status == 404){
 
 		    include "views/modules/modals/pages.php";
 
-		    require_once "controllers/pages.controller.php";
 			$managePage = new PagesController();
 		    $managePage->managePage();
 
@@ -427,7 +425,6 @@ if($adminTable->status == 404){
 
 		    include "views/modules/modals/modules.php";
 
-		    require_once "controllers/modules.controller.php";
 			$manageModule = new ModulesController();
 			$manageModule->manageModule();
    

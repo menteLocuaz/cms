@@ -1,4 +1,8 @@
-<?php 
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
 
 class CurlController{
 
@@ -26,10 +30,32 @@ class CurlController{
 		));
 
 		$response = curl_exec($curl);
-
+		$curlError = curl_error($curl);
+		$curlErrno = curl_errno($curl);
 		curl_close($curl);
-		$response = json_decode($response);
-		return $response;
+
+		if ($response === false || $response === '') {
+			error_log(sprintf(
+				'CurlController::request failed (errno=%d): %s | URL: %s',
+				$curlErrno,
+				$curlError,
+				$url
+			));
+			return null;
+		}
+
+		$decoded = json_decode($response);
+
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			error_log(sprintf(
+				'CurlController::request JSON decode error: %s | Body: %s',
+				json_last_error_msg(),
+				substr($response, 0, 200)
+			));
+			return null;
+		}
+
+		return $decoded;
 
 	}
 
@@ -62,10 +88,36 @@ class CurlController{
 		));
 
 		$response = curl_exec($curl);
-
+		$curlError = curl_error($curl);
+		$curlErrno = curl_errno($curl);
 		curl_close($curl);
-		$response = json_decode($response);
-		return $response->choices[0]->message->content;
+
+		if ($response === false || $response === '') {
+			error_log(sprintf(
+				'CurlController::chatGPT failed (errno=%d): %s',
+				$curlErrno,
+				$curlError
+			));
+			return null;
+		}
+
+		$decoded = json_decode($response);
+
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			error_log(sprintf(
+				'CurlController::chatGPT JSON decode error: %s | Body: %s',
+				json_last_error_msg(),
+				substr($response, 0, 200)
+			));
+			return null;
+		}
+
+		if (!isset($decoded->choices[0]->message->content)) {
+			error_log('CurlController::chatGPT unexpected response structure: ' . substr($response, 0, 200));
+			return null;
+		}
+
+		return $decoded->choices[0]->message->content;
 
 	}
 

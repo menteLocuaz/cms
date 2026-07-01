@@ -6,7 +6,6 @@
 	Traemos todas las tablas
 	=============================================*/
 
-	require_once "controllers/install.controller.php";
 	$tables = InstallController::getTables();
 
 	?>

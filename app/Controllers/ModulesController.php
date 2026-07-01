@@ -1,7 +1,8 @@
-<?php 
+<?php
 
-require_once "controllers/install.controller.php";
-require_once "controllers/template.controller.php";
+declare(strict_types=1);
+
+namespace App\Controllers;
 
 class ModulesController{
 

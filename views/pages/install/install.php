@@ -124,10 +124,10 @@
 
 
 				<?php 
-				
-				require_once "controllers/install.controller.php";
+
+				use App\Controllers\InstallController;
 				$install = new InstallController();
-				$install -> install();
+				$install->install();
 
 				?>
 

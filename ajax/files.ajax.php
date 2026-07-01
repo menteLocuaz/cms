@@ -1,13 +1,17 @@
-<?php 
+<?php
 
-define('DIR', __DIR__);
+declare(strict_types=1);
+
+use App\Controllers\CurlController;
+use App\Controllers\TemplateController;
+
+define('BASE_PATH', dirname(__DIR__));
 
 ini_set("display_errors",1);
 ini_set("log_errors",1);
-ini_set("error_log", DIR."/php_error_log");
+ini_set("error_log", BASE_PATH."/php_error_log");
 
-require_once "../controllers/template.controller.php";
-require_once "../controllers/curl.controller.php";
+require_once BASE_PATH . "/vendor/autoload.php";
 
 class FilesController{
 

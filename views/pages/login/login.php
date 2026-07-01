@@ -100,7 +100,6 @@ if(isset($_GET["scode"])){
 
 				<?php 
 				
-					require_once "controllers/admins.controller.php";
 					$login = new AdminsController();
 					$login -> login();
 
@@ -128,7 +127,6 @@ if(isset($_GET["scode"])){
 
 				<?php 
 				
-					require_once "controllers/admins.controller.php";
 					$login = new AdminsController();
 					$login -> securityCode();
 
@@ -202,7 +200,6 @@ Modal para recuperar contraseña
 
         <?php 
 
-        require_once "controllers/admins.controller.php";
         $reset = new AdminsController();
         $reset -> resetPassword();
 

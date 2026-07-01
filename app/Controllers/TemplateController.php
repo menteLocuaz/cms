@@ -1,4 +1,8 @@
-<?php 
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -11,8 +15,35 @@ class TemplateController{
 
 	public function index(){
 
-		include "views/template.php";
-	
+		/*=============================================
+		Aliases para vistas (compatibilidad con vistas
+		que referencian controllers sin namespace)
+		=============================================*/
+
+		if (!class_exists('CurlController', false)) {
+			class_alias(\App\Controllers\CurlController::class, 'CurlController');
+		}
+		if (!class_exists('TemplateController', false)) {
+			class_alias(\App\Controllers\TemplateController::class, 'TemplateController');
+		}
+		if (!class_exists('AdminsController', false)) {
+			class_alias(\App\Controllers\AdminsController::class, 'AdminsController');
+		}
+		if (!class_exists('PagesController', false)) {
+			class_alias(\App\Controllers\PagesController::class, 'PagesController');
+		}
+		if (!class_exists('ModulesController', false)) {
+			class_alias(\App\Controllers\ModulesController::class, 'ModulesController');
+		}
+		if (!class_exists('DynamicController', false)) {
+			class_alias(\App\Controllers\DynamicController::class, 'DynamicController');
+		}
+		if (!class_exists('InstallController', false)) {
+			class_alias(\App\Controllers\InstallController::class, 'InstallController');
+		}
+
+		include BASE_PATH . "/views/template.php";
+
 	}
 
 	/*=============================================
