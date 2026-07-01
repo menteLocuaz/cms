@@ -38,7 +38,6 @@ $block2 = count($module->columns) - $block1;
 
 		<?php 
 
-			require_once "controllers/dynamic.controller.php";
 			$manageData = new DynamicController();
 			$manageData -> manage();
 

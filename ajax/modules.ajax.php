@@ -1,7 +1,11 @@
-<?php 
+<?php
 
-require_once "../controllers/curl.controller.php";
-require_once "../controllers/install.controller.php";
+declare(strict_types=1);
+
+use App\Controllers\CurlController;
+use App\Controllers\InstallController;
+
+require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 class ModulesAjax{
 

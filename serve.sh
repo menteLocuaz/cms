@@ -1,1 +1,1 @@
-php -S localhost:6060 -t public
+php -S localhost:6060 serve-router.php

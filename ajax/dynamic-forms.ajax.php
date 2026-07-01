@@ -1,6 +1,10 @@
 <?php
 
-require_once '../controllers/curl.controller.php';
+declare(strict_types=1);
+
+use App\Controllers\CurlController;
+
+require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 class DynamicFormsController
 {

@@ -1,3 +1,7 @@
-[01-Jul-2026 17:53:36 UTC] PHP Warning:  Attempt to read property "status" on null in /home/arancamon/Documents/cms/views/template.php on line 33
-[01-Jul-2026 17:53:36 UTC] PHP Warning:  Attempt to read property "results" on null in /home/arancamon/Documents/cms/views/template.php on line 39
-[01-Jul-2026 17:53:36 UTC] PHP Warning:  Trying to access array offset on null in /home/arancamon/Documents/cms/views/template.php on line 39
+[01-Jul-2026 18:08:15 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:15 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:15 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:19 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:20 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:20 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins
+[01-Jul-2026 18:08:20 UTC] CurlController::request failed (errno=6): Could not resolve host: api.pos.com | URL: admins

@@ -1,7 +1,11 @@
 <?php
 
-require_once "../controllers/curl.controller.php";
-require_once "../controllers/template.controller.php";
+declare(strict_types=1);
+
+use App\Controllers\CurlController;
+use App\Controllers\TemplateController;
+
+require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 class DynamicTablesController{
 
