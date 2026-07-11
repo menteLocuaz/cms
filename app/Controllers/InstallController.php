@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use PDO;
+use PDOException;
+
 class InstallController
 {
     /*=============================================
@@ -13,9 +16,11 @@ class InstallController
     public static function infoDatabase()
     {
         $infoDB = array(
-            'database' => 'pos',
-            'user' => 'root',
-            'pass' => '',
+            'host' => $_ENV['DB_HOST'] ?? 'localhost',
+            'port' => $_ENV['DB_PORT'] ?? '5432',
+            'database' => $_ENV['DB_DATABASE'] ?? 'pos',
+            'user' => $_ENV['DB_USERNAME'] ?? 'postgres',
+            'password' => $_ENV['DB_PASSWORD'] ?? '',
         );
 
         return $infoDB;
@@ -27,14 +32,16 @@ class InstallController
 
     public static function connect()
     {
-        try {
-            $link = new PDO(
-                'mysql:host=localhost;dbname=' . InstallController::infoDatabase()['database'],
-                InstallController::infoDatabase()['user'],
-                InstallController::infoDatabase()['pass'],
-            );
+        $config = self::infoDatabase();
 
-            $link->exec('set names utf8');
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $config['host'], $config['port'], $config['database']);
+
+        try {
+            $link = new PDO($dsn, $config['user'], $config['password'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
         } catch (PDOException $e) {
             die('Error: ' . $e->getMessage());
         }
@@ -58,15 +65,15 @@ class InstallController
              * Creamos la tabla admins
              * =============================================*/
 
-            $sqlAdmins = "CREATE TABLE admins ( 
-				id_admin INT NOT NULL AUTO_INCREMENT,
+            $sqlAdmins = 'CREATE TABLE IF NOT EXISTS admins ( 
+				id_admin SERIAL PRIMARY KEY,
 				email_admin TEXT NULL DEFAULT NULL,
 				password_admin TEXT NULL DEFAULT NULL, 
 				rol_admin TEXT NULL DEFAULT NULL,
 				permissions_admin TEXT NULL DEFAULT NULL, 
 				token_admin TEXT NULL DEFAULT NULL,
 				token_exp_admin TEXT NULL DEFAULT NULL,
-				status_admin INT NULL DEFAULT '1',
+				status_admin INT NULL DEFAULT 1,
 				title_admin TEXT NULL DEFAULT NULL,  
 				symbol_admin TEXT NULL DEFAULT NULL,
 				font_admin TEXT NULL DEFAULT NULL,
@@ -75,8 +82,8 @@ class InstallController
 				scode_admin TEXT NULL DEFAULT NULL, 
 				chatgpt_admin TEXT NULL DEFAULT NULL, 
 				date_created_admin DATE NULL DEFAULT NULL,
-				date_updated_admin TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_admin))";
+				date_updated_admin TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtAdmins = InstallController::connect()->prepare($sqlAdmins);
 
@@ -84,16 +91,16 @@ class InstallController
              * Creamos la tabla pages
              * =============================================*/
 
-            $sqlPages = "CREATE TABLE pages ( 
-				id_page INT NOT NULL AUTO_INCREMENT,
+            $sqlPages = 'CREATE TABLE IF NOT EXISTS pages ( 
+				id_page SERIAL PRIMARY KEY,
 				title_page TEXT NULL DEFAULT NULL,
 				url_page TEXT NULL DEFAULT NULL,
 				icon_page TEXT NULL DEFAULT NULL,
 				type_page TEXT NULL DEFAULT NULL,
-				order_page INT NULL DEFAULT '1',
+				order_page INT NULL DEFAULT 1,
 				date_created_page DATE NULL DEFAULT NULL,
-				date_updated_page TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_page))";
+				date_updated_page TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtPages = InstallController::connect()->prepare($sqlPages);
 
@@ -101,18 +108,18 @@ class InstallController
              * Creamos la tabla modules
              * =============================================*/
 
-            $sqlModules = "CREATE TABLE modules ( 
-				id_module INT NOT NULL AUTO_INCREMENT,
-				id_page_module INT NULL DEFAULT '0',
+            $sqlModules = 'CREATE TABLE IF NOT EXISTS modules ( 
+				id_module SERIAL PRIMARY KEY,
+				id_page_module INT NULL DEFAULT 0,
 				type_module TEXT NULL DEFAULT NULL,
 				title_module TEXT NULL DEFAULT NULL,
 				suffix_module TEXT NULL DEFAULT NULL,
 				content_module TEXT NULL DEFAULT NULL,
-				width_module INT NULL DEFAULT '100',
-				editable_module INT NULL DEFAULT '1',
+				width_module INT NULL DEFAULT 100,
+				editable_module INT NULL DEFAULT 1,
 				date_created_module DATE NULL DEFAULT NULL,
-				date_updated_module TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_module))";
+				date_updated_module TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtModules = InstallController::connect()->prepare($sqlModules);
 
@@ -120,17 +127,17 @@ class InstallController
              * Creamos la tabla columns
              * =============================================*/
 
-            $sqlColumns = "CREATE TABLE columns ( 
-				id_column INT NOT NULL AUTO_INCREMENT,
-				id_module_column INT NULL DEFAULT '0',
+            $sqlColumns = 'CREATE TABLE IF NOT EXISTS columns ( 
+				id_column SERIAL PRIMARY KEY,
+				id_module_column INT NULL DEFAULT 0,
 				title_column TEXT NULL DEFAULT NULL,
 				alias_column TEXT NULL DEFAULT NULL,
 				type_column TEXT NULL DEFAULT NULL,
 				matrix_column TEXT NULL DEFAULT NULL,
-				visible_column INT NULL DEFAULT '1',
+				visible_column INT NULL DEFAULT 1,
 				date_created_column DATE NULL DEFAULT NULL,
-				date_updated_column TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_column))";
+				date_updated_column TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtColumns = InstallController::connect()->prepare($sqlColumns);
 
@@ -138,17 +145,17 @@ class InstallController
              * Creamos la tabla folders
              * =============================================*/
 
-            $sqlFolders = "CREATE TABLE folders ( 
-				id_folder INT NOT NULL AUTO_INCREMENT,
+            $sqlFolders = 'CREATE TABLE IF NOT EXISTS folders ( 
+				id_folder SERIAL PRIMARY KEY,
 				name_folder TEXT NULL DEFAULT NULL,
 				size_folder TEXT NULL DEFAULT NULL,
-				total_folder DOUBLE NULL DEFAULT '0',
+				total_folder DOUBLE PRECISION NULL DEFAULT 0,
 				max_upload_folder TEXT NULL DEFAULT NULL,
 				url_folder TEXT NULL DEFAULT NULL,
 				keys_folder TEXT NULL DEFAULT NULL,
 				date_created_folder DATE NULL DEFAULT NULL,
-				date_updated_folder TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_folder))";
+				date_updated_folder TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtFolders = InstallController::connect()->prepare($sqlFolders);
 
@@ -156,19 +163,19 @@ class InstallController
              * Creamos la tabla files
              * =============================================*/
 
-            $sqlFiles = "CREATE TABLE files ( 
-				id_file INT NOT NULL AUTO_INCREMENT,
-				id_folder_file INT NULL DEFAULT '0',
+            $sqlFiles = 'CREATE TABLE IF NOT EXISTS files ( 
+				id_file SERIAL PRIMARY KEY,
+				id_folder_file INT NULL DEFAULT 0,
 				name_file TEXT NULL DEFAULT NULL,
 				extension_file TEXT NULL DEFAULT NULL,
 				type_file TEXT NULL DEFAULT NULL,
-				size_file DOUBLE NULL DEFAULT '0',
+				size_file DOUBLE PRECISION NULL DEFAULT 0,
 				link_file TEXT NULL DEFAULT NULL,
 				thumbnail_vimeo_file TEXT NULL DEFAULT NULL,
 				id_mailchimp_file TEXT NULL DEFAULT NULL,
 				date_created_file DATE NULL DEFAULT NULL,
-				date_updated_file TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				PRIMARY KEY (id_file))";
+				date_updated_file TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)';
 
             $stmtFiles = InstallController::connect()->prepare($sqlFiles);
 
@@ -259,7 +266,7 @@ class InstallController
                 $url = 'modules?token=no&except=id_module';
                 $method = 'POST';
                 $fields = array(
-                    'id_page_module' => $adminPage->results->lastId,
+                    'id_page_module' => isset($adminPage->results->lastId) ? $adminPage->results->lastId : 0,
                     'type_module' => 'breadcrumbs',
                     'title_module' => 'Administradores',
                     'date_created_module' => date('Y-m-d'),
@@ -274,7 +281,7 @@ class InstallController
                 $url = 'modules?token=no&except=id_module';
                 $method = 'POST';
                 $fields = array(
-                    'id_page_module' => $adminPage->results->lastId,
+                    'id_page_module' => isset($adminPage->results->lastId) ? $adminPage->results->lastId : 0,
                     'type_module' => 'tables',
                     'title_module' => 'admins',
                     'suffix_module' => 'admin',
@@ -294,20 +301,21 @@ class InstallController
                     'name_folder' => 'Server',
                     'size_folder' => '200000000000',
                     'max_upload_folder' => '500000000',
-                    'url_folder' => $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'],
+                    'url_folder' =>
+                        ($_SERVER['REQUEST_SCHEME'] ?? 'http') . '://' . ($_SERVER['SERVER_NAME'] ?? 'localhost'),
                     'date_created_folder' => date('Y-m-d'),
                 );
 
                 $serverFolder = CurlController::request($url, $method, $fields);
 
                 if (
-                    $register->status == 200
-                    && $homePage->status == 200
-                    && $adminPage->status == 200
-                    && $filesPage->status == 200
-                    && $breadcrumbModule->status == 200
-                    && $tableModule->status == 200
-                    && $serverFolder->status == 200
+                    (isset($register->status) ? $register->status : 0) == 200
+                    && (isset($homePage->status) ? $homePage->status : 0) == 200
+                    && (isset($adminPage->status) ? $adminPage->status : 0) == 200
+                    && (isset($filesPage->status) ? $filesPage->status : 0) == 200
+                    && (isset($breadcrumbModule->status) ? $breadcrumbModule->status : 0) == 200
+                    && (isset($tableModule->status) ? $tableModule->status : 0) == 200
+                    && (isset($serverFolder->status) ? $serverFolder->status : 0) == 200
                 ) {
                     /*=============================================
                      * Creamos cada una de las columnas de la tabla de administradores
@@ -473,10 +481,9 @@ class InstallController
 
     public static function getTable($table)
     {
-        $database = InstallController::infoDatabase()['database'];
         $validate = InstallController::connect()
             ->query(
-                "SELECT COLUMN_NAME AS item FROM information_schema.columns WHERE table_schema = '$database' AND table_name = '$table'",
+                "SELECT column_name AS item FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '$table'",
             )
             ->fetchAll(PDO::FETCH_OBJ);
 
@@ -497,7 +504,9 @@ class InstallController
 
     public static function getTables()
     {
-        $tables = InstallController::connect()->query('SHOW FULL TABLES')->fetchAll(PDO::FETCH_COLUMN);
+        $tables = InstallController::connect()
+            ->query('SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema()')
+            ->fetchAll(PDO::FETCH_COLUMN);
 
         /*=============================================
          * Validamos existencias de las tablas
@@ -508,4 +517,3 @@ class InstallController
         }
     }
 }
-

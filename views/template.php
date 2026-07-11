@@ -1,47 +1,47 @@
-<?php 
+<?php
 
 /*=============================================
-Iniciar variables de sesión
-=============================================*/
+ * Iniciar variables de sesión
+ * =============================================*/
 
 ob_start();
 session_start();
 
 /*=============================================
-Capturar parámetros de la url
-=============================================*/
+ * Capturar parámetros de la url
+ * =============================================*/
 
-$routesArray = explode("/", $_SERVER["REQUEST_URI"]);
+$routesArray = explode('/', $_SERVER['REQUEST_URI']);
 
 array_shift($routesArray);
 
 foreach ($routesArray as $key => $value) {
-	
-	$routesArray[$key] = explode("?",$value)[0];
+    $routesArray[$key] = explode('?', $value)[0];
 }
 
 /*=============================================
-Validar si existe la base de datos con la tabla admins
-=============================================*/
+ * Validar si existe la base de datos con la tabla admins
+ * =============================================*/
 
-$url = "admins";
-$method = "GET";
+$url = 'admins';
+$method = 'GET';
 $fields = array();
 
-$adminTable = CurlController::request($url,$method,$fields);
+$adminTable = CurlController::request($url, $method, $fields);
 
-if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status == 404){
+if (
+    !is_object($adminTable) ||
+    !isset($adminTable->status) ||
+    $adminTable->status != 200 ||
+    !isset($adminTable->results[0]) ||
+    !is_object($adminTable->results[0])
+) {
+    $admin = null;
+} else {
+    $admin = $adminTable->results[0];
 
-	$admin = null;
-
-}else{
-
-	$admin = $adminTable->results[0] ?? null;
-	// echo '<pre>'; print_r($admin); echo '</pre>';
+    // echo '<pre>'; print_r($admin); echo '</pre>';
 }
-
-
-
 
 ?>
 
@@ -87,10 +87,12 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 			Típografía del dashboard
 			=============================================*/
 
-			<?php if ($admin->font_admin != null):?>
+			<?php if ($admin->font_admin != null): ?>
 
 				body{
-					font-family: <?php echo str_replace("+"," ",explode("=",explode(":",explode("?",$admin->font_admin)[1])[0])[1]) ?>, sans-serif !important;	
+					font-family: <?php echo
+    					str_replace('+', ' ', explode('=', explode(':', explode('?', $admin->font_admin)[1])[0])[1])
+					?>, sans-serif !important;	
 				}
 
 			<?php endif ?>
@@ -224,24 +226,19 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 </head>
 <body>
 
-	<?php 
+	<?php
 
-	if(!isset($_SESSION["admin"])){
-
-		if($admin == null){
-
-			include "pages/install/install.php";
-
-		}else{
-
-			include "pages/login/login.php";
-		}
-
+	if (!isset($_SESSION['admin'])) {
+    	if ($admin == null) {
+        	include 'pages/install/install.php';
+    	} else {
+        	include 'pages/login/login.php';
+    	}
 	}
 
 	?>
 
-	<?php if (isset($_SESSION["admin"])): ?>
+	<?php if (isset($_SESSION['admin'])): ?>
 
 		<!--=============================================
 		PLANTILLA DASHBOARD
@@ -253,7 +250,7 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 			SIDEBAR
 			===============================================-->
 
-			<?php include "modules/sidebar.php" ?>
+			<?php include 'modules/sidebar.php' ?>
 
 			<div id="page-content-wrapper">
 				
@@ -261,7 +258,7 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 				NAV
 				===============================================-->
 
-				<?php include "modules/nav.php" ?>
+				<?php include 'modules/nav.php' ?>
 
 				<!--=============================================
 				MAIN PAGE
@@ -269,9 +266,9 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 
 				<?php if (!empty($routesArray[0])): ?>
 
-					<?php if ($routesArray[0] == "logout"): ?>
+					<?php if ($routesArray[0] == 'logout'): ?>
 
-						<?php include "pages/".$routesArray[0]."/".$routesArray[0].".php"; ?>
+						<?php include 'pages/' . $routesArray[0] . '/' . $routesArray[0] . '.php'; ?>
 
 					<?php else: ?>
 
@@ -279,39 +276,39 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 						Validar permisos
 						===========================================-->
 
-						<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $_SESSION["admin"]->rol_admin == "admin" || $_SESSION["admin"]->rol_admin == "editor" && isset(json_decode(urldecode($_SESSION["admin"]->permissions_admin), true)[$routesArray[0]]) && json_decode(urldecode($_SESSION["admin"]->permissions_admin), true)[$routesArray[0]] == "on"): ?>
+						<?php if (
+    						$_SESSION['admin']->rol_admin == 'superadmin'
+    						|| $_SESSION['admin']->rol_admin == 'admin'
+    						|| $_SESSION['admin']->rol_admin == 'editor'
+    						&& isset(json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$routesArray[0]])
+    						&& json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$routesArray[0]] == 'on'
+						): ?>
 
 							<!--=========================================
 							Agregamos páginas dinámicas y personalizadas
 							===========================================-->
 
-							<?php 
+							<?php
 
-								$url = "pages?linkTo=url_page&equalTo=".$routesArray[0];
-								$method = "GET";
-								$fields = array();
+							$url = 'pages?linkTo=url_page&equalTo=' . $routesArray[0];
+							$method = 'GET';
+							$fields = array();
 
-								$page = CurlController::request($url,$method,$fields);
-								
-								if($page->status == 200 && $page->results[0]->type_page == "modules"){
+							$page = CurlController::request($url, $method, $fields);
 
-									include "pages/dynamic/dynamic.php";
-								
-								}else if($page->status == 200 && $page->results[0]->type_page == "custom"){
-
-									include "pages/custom/".$routesArray[0]."/".$routesArray[0].".php";
-								
-								}else{
-
-									include "pages/404/404.php";
-								
-								}
+							if ($page->status == 200 && $page->results[0]->type_page == 'modules') {
+    							include 'pages/dynamic/dynamic.php';
+							} else if ($page->status == 200 && $page->results[0]->type_page == 'custom') {
+    							include 'pages/custom/' . $routesArray[0] . '/' . $routesArray[0] . '.php';
+							} else {
+    							include 'pages/404/404.php';
+							}
 
 							?>
 
 						<?php else: ?>
 
-							<?php include "pages/404/404.php"; ?>
+							<?php include 'pages/404/404.php'; ?>
 
 						<?php endif ?>
 						
@@ -324,34 +321,28 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 				 	Validar permisos para super y admins
 					===========================================-->
 
-					<?php if ($_SESSION["admin"]->rol_admin == "superadmin" || $_SESSION["admin"]->rol_admin == "admin"): ?>
+					<?php if ($_SESSION['admin']->rol_admin == 'superadmin' || $_SESSION['admin']->rol_admin == 'admin'): ?>
 
 						<!--=========================================
 						Agregamos la página inicial
 						===========================================-->
 
-						<?php 
+						<?php
 
-							$url = "pages?linkTo=order_page&equalTo=1";
-							$method = "GET";
-							$fields = array();
+						$url = 'pages?linkTo=order_page&equalTo=1';
+						$method = 'GET';
+						$fields = array();
 
-							$page = CurlController::request($url,$method,$fields);
+						$page = CurlController::request($url, $method, $fields);
 
-							if($page->status == 200 && $page->results[0]->type_page == "modules"){
+						if ($page->status == 200 && $page->results[0]->type_page == 'modules') {
+    						include 'pages/dynamic/dynamic.php';
+						} else if ($page->status == 200 && $page->results[0]->type_page == 'custom') {
+    						include 'pages/custom/' . $page->results[0]->url_page . '/' . $page->results[0]->url_page . '.php';
+						} else {
+    						include 'pages/404/404.php';
+						}
 
-								include "pages/dynamic/dynamic.php";
-							
-							}else if($page->status == 200 && $page->results[0]->type_page == "custom"){
-
-								include "pages/custom/".$page->results[0]->url_page."/".$page->results[0]->url_page.".php";
-							
-							}else{
-
-								include "pages/404/404.php";
-							
-							}
-						
 						?>
 
 					<?php else: ?>
@@ -360,31 +351,27 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 				 	Validar permisos para editores
 					===========================================-->
 
-						<?php if ($_SESSION["admin"]->rol_admin == "editor"): ?>
+						<?php if ($_SESSION['admin']->rol_admin == 'editor'): ?>
 
 							<?php
 
-								$url = "pages?linkTo=url_page&equalTo=".array_keys(json_decode(urldecode($_SESSION["admin"]->permissions_admin),true))[0];
-								$method = "GET";
-								$fields = array();
+							$url =
+    							'pages?linkTo=url_page&equalTo='
+    							. array_keys(json_decode(urldecode($_SESSION['admin']->permissions_admin), true))[0];
+							$method = 'GET';
+							$fields = array();
 
-								$page = CurlController::request($url,$method,$fields);
+							$page = CurlController::request($url, $method, $fields);
 
-								$routesArray[0] = array_keys(json_decode(urldecode($_SESSION["admin"]->permissions_admin),true))[0];
+							$routesArray[0] = array_keys(json_decode(urldecode($_SESSION['admin']->permissions_admin), true))[0];
 
-								if($page->status == 200 && $page->results[0]->type_page == "modules"){
-
-									include "pages/dynamic/dynamic.php";
-								
-								}else if($page->status == 200 && $page->results[0]->type_page == "custom"){
-
-									include "pages/custom/".$page->results[0]->url_page."/".$page->results[0]->url_page.".php";
-								
-								}else{
-
-									include "pages/404/404.php";
-								
-								}
+							if ($page->status == 200 && $page->results[0]->type_page == 'modules') {
+    							include 'pages/dynamic/dynamic.php';
+							} else if ($page->status == 200 && $page->results[0]->type_page == 'custom') {
+    							include 'pages/custom/' . $page->results[0]->url_page . '/' . $page->results[0]->url_page . '.php';
+							} else {
+    							include 'pages/404/404.php';
+							}
 
 							?>
 
@@ -398,36 +385,34 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 
 		</div>
 
-		<?php 
+		<?php
 
 		/*=============================================
-    	Incluimos modal de perfiles
-    	=============================================*/
+		 * Incluimos modal de perfiles
+		 * =============================================*/
 
-    	include "modules/modals/profile.php";
+		include 'modules/modals/profile.php';
 		$update = new AdminsController();
-	    $update->updateAdmin();
+		$update->updateAdmin();
 
-	    if($_SESSION["admin"]->rol_admin == "superadmin"){
+		if ($_SESSION['admin']->rol_admin == 'superadmin') {
+    		/*=============================================
+    		 * Incluimos modal de páginas
+    		 * =============================================*/
 
-	    	/*=============================================
-	    	Incluimos modal de páginas
-	    	=============================================*/
+    		include 'views/modules/modals/pages.php';
 
-		    include "views/modules/modals/pages.php";
+    		$managePage = new PagesController();
+    		$managePage->managePage();
 
-			$managePage = new PagesController();
-		    $managePage->managePage();
+    		/*=============================================
+    		 * Incluimos modal de módulos
+    		 * =============================================*/
 
-		    /*=============================================
-	    	Incluimos modal de módulos
-	    	=============================================*/
+    		include 'views/modules/modals/modules.php';
 
-		    include "views/modules/modals/modules.php";
-
-			$manageModule = new ModulesController();
-			$manageModule->manageModule();
-   
+    		$manageModule = new ModulesController();
+    		$manageModule->manageModule();
 		}
 
 		?>
@@ -450,3 +435,4 @@ if(!is_object($adminTable) || !isset($adminTable->status) || $adminTable->status
 	
 </body>
 </html>
+
