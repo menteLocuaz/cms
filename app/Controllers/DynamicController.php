@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Http\Security;
+
 class DynamicController
 {
     /*=============================================
@@ -13,6 +15,8 @@ class DynamicController
     public function manage()
     {
         if (isset($_POST['module'])) {
+            Security::requireCsrf();
+
             echo '<script>
 
 				fncMatPreloader("on");
@@ -31,10 +35,15 @@ class DynamicController
                  * Actualizar datos
                  * =============================================*/
 
+                $verifiedId = Security::verifyId($_POST['idItem']);
+                if ($verifiedId === null) {
+                    $verifiedId = base64_decode($_POST['idItem']);
+                }
+
                 $url =
                     $module->title_module
                     . '?id='
-                    . base64_decode($_POST['idItem'])
+                    . $verifiedId
                     . '&nameId=id_'
                     . $module->suffix_module
                     . '&token='
@@ -49,7 +58,7 @@ class DynamicController
                         $fields .=
                             $value->title_column
                             . '='
-                            . crypt(trim($_POST[$value->title_column]), '$2a$07$azybxcags23425sdg23sdfhsd$')
+                            . Security::hashPassword(trim($_POST[$value->title_column]))
                             . '&';
                     } else if ($value->type_column == 'email') {
                         $fields .= $value->title_column . '=' . trim($_POST[$value->title_column]) . '&';
@@ -97,10 +106,7 @@ class DynamicController
 
                 foreach ($module->columns as $key => $value) {
                     if ($value->type_column == 'password') {
-                        $fields[$value->title_column] = crypt(
-                            trim($_POST[$value->title_column]),
-                            '$2a$07$azybxcags23425sdg23sdfhsd$',
-                        );
+                        $fields[$value->title_column] = Security::hashPassword(trim($_POST[$value->title_column]));
                     } else if ($value->type_column == 'email') {
                         $fields[$value->title_column] = trim($_POST[$value->title_column]);
                     } else {

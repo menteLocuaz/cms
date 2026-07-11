@@ -1,6 +1,10 @@
 Options -Indexes
 Options -MultiViews
 
-<FilesMatch "\.(env|env\.example|json|lock|gitkeep)$">
+<FilesMatch "^(\.env(\..*)?|composer\.(json|lock)|php_error_log|server\.log)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(json|lock)$">
     Require all denied
 </FilesMatch>

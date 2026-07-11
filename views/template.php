@@ -7,6 +7,10 @@
 ob_start();
 session_start();
 
+if (!defined('DIR')) {
+    define('DIR', BASE_PATH);
+}
+
 /*=============================================
  * Capturar parámetros de la url
  * =============================================*/
@@ -30,11 +34,11 @@ $fields = array();
 $adminTable = CurlController::request($url, $method, $fields);
 
 if (
-    !is_object($adminTable) ||
-    !isset($adminTable->status) ||
-    $adminTable->status != 200 ||
-    !isset($adminTable->results[0]) ||
-    !is_object($adminTable->results[0])
+    !is_object($adminTable)
+    || !isset($adminTable->status)
+    || $adminTable->status != 200
+    || !isset($adminTable->results[0])
+    || !is_object($adminTable->results[0])
 ) {
     $admin = null;
 } else {
@@ -435,4 +439,3 @@ if (
 	
 </body>
 </html>
-

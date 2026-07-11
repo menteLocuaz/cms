@@ -1,2 +1,9 @@
 /vendor/
 /.env
+/.env.*
+/php_error_log
+/serve.sh
+/serve.bat
+/server.log
+/.phpunit.cache/
+/.phpunit.result.cache

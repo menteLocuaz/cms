@@ -36,6 +36,8 @@ $block2 = count($module->columns) - $block1;
 	
 	<form method="POST" class="needs-validation" novalidate>
 
+	<?= \App\Http\Security::csrfField() ?>
+
 		<?php 
 
 			$manageData = new DynamicController();

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Http\Security;
+use PDO;
+
 class ModulesController
 {
     /*=============================================
@@ -13,6 +16,8 @@ class ModulesController
     public function manageModule()
     {
         if (isset($_POST['title_module'])) {
+            Security::requireCsrf();
+
             echo '<script>
 
 				fncMatPreloader("on");
@@ -20,32 +25,42 @@ class ModulesController
 
 			</script>';
 
+            $title_module = strtolower(trim($_POST['title_module']));
+            $suffix_module = strtolower(trim($_POST['suffix_module'] ?? ''));
+
+            if (!Security::isValidIdentifier($title_module) || ($suffix_module !== '' && !Security::isValidIdentifier($suffix_module))) {
+                echo '<script>fncMatPreloader("off");fncToastr("error","Identificador de módulo inválido");</script>';
+                return;
+            }
+
             /*=============================================
              * Editando Módulo
              * =============================================*/
 
             if (isset($_POST['id_module'])) {
+                $verifiedId = Security::verifyId($_POST['id_module']);
+                if ($verifiedId === null) {
+                    $verifiedId = base64_decode($_POST['id_module']);
+                }
+
                 $url =
                     'modules?id='
-                    . base64_decode($_POST['id_module'])
+                    . $verifiedId
                     . '&nameId=id_module&token='
                     . $_SESSION['admin']->token_admin
                     . '&table=admins&suffix=admin';
                 $method = 'PUT';
                 $fields =
                     'title_module='
-                    . strtolower(trim($_POST['title_module']))
+                    . $title_module
                     . '&suffix_module='
-                    . strtolower(trim($_POST['suffix_module']))
+                    . $suffix_module
                     . '&content_module='
                     . $_POST['content_module']
                     . '&width_module='
                     . $_POST['width_module']
                     . '&editable_module='
                     . $_POST['editable_module'];
-
-                $title_module = strtolower(trim($_POST['title_module']));
-                $suffix_module = strtolower(trim($_POST['suffix_module']));
 
                 $updateModule = CurlController::request($url, $method, $fields);
 
@@ -67,6 +82,16 @@ class ModulesController
 
                             if (!empty($indexColumns)) {
                                 foreach ($indexColumns as $key => $value) {
+                                    $newColTitle = str_replace(' ', '_', $_POST['title_column_' . $value] ?? '');
+                                    $origColTitle = $_POST['original_title_column_' . $value] ?? '';
+
+                                    if (
+                                        !Security::isValidIdentifier($newColTitle)
+                                        || ($origColTitle !== '' && !Security::isValidIdentifier($origColTitle))
+                                    ) {
+                                        continue;
+                                    }
+
                                     $type = TemplateController::typeColumn($_POST['type_column_' . $value]);
 
                                     /*=============================================
@@ -102,9 +127,9 @@ class ModulesController
                                                 'ALTER TABLE '
                                                 . $title_module
                                                 . ' CHANGE '
-                                                . $_POST['original_title_column_' . $value]
+                                                . $origColTitle
                                                 . ' '
-                                                . str_replace(' ', '_', $_POST['title_column_' . $value])
+                                                . $newColTitle
                                                 . ' '
                                                 . $type;
 
@@ -126,7 +151,7 @@ class ModulesController
                                         $method = 'POST';
                                         $data = array(
                                             'id_module_column' => base64_decode($_POST['id_module']),
-                                            'title_column' => str_replace(' ', '_', $_POST['title_column_' . $value]),
+                                            'title_column' => $newColTitle,
                                             'alias_column' => $_POST['alias_column_' . $value],
                                             'type_column' => $_POST['type_column_' . $value],
                                             'visible_column' => $_POST['visible_column_' . $value],
@@ -143,14 +168,18 @@ class ModulesController
                                             if ($key == 0) {
                                                 $after = 'id_' . $suffix_module;
                                             } else {
-                                                $after = $_POST['title_column_' . $indexColumns[$key - 1]];
+                                                $prevTitle = str_replace(' ', '_', $_POST['title_column_' . $indexColumns[$key - 1]] ?? '');
+                                                if (!Security::isValidIdentifier($prevTitle)) {
+                                                    continue;
+                                                }
+                                                $after = $prevTitle;
                                             }
 
                                             $sqlCreateColumns =
                                                 'ALTER TABLE '
                                                 . $title_module
                                                 . ' ADD '
-                                                . str_replace(' ', '_', $_POST['title_column_' . $value])
+                                                . $newColTitle
                                                 . ' '
                                                 . $type
                                                 . ' AFTER '
@@ -190,6 +219,11 @@ class ModulesController
 
                                     $column = CurlController::request($url, $method, $fields);
 
+                                    $colToDelete = $column->results[0]->title_column ?? '';
+                                    if (!Security::isValidIdentifier($colToDelete)) {
+                                        continue;
+                                    }
+
                                     /*=============================================
                                      * Eliminar de la tabla columnas
                                      * =============================================*/
@@ -211,7 +245,7 @@ class ModulesController
                                          * =============================================*/
 
                                         $sqlDeleteColumn =
-                                            "ALTER TABLE $title_module DROP " . $column->results[0]->title_column;
+                                            'ALTER TABLE ' . $title_module . ' DROP ' . $colToDelete;
 
                                         $stmtDeleteColumn = InstallController::connect()->prepare($sqlDeleteColumn);
 
@@ -368,54 +402,60 @@ class ModulesController
                             if (isset($_POST['indexColumns'])) {
                                 $indexColumns = json_decode($_POST['indexColumns'], true);
 
-                                if (!empty($indexColumns)) {
-                                    foreach ($indexColumns as $key => $value) {
+                            if (!empty($indexColumns)) {
+                                foreach ($indexColumns as $key => $value) {
+                                    $newColTitle = str_replace(' ', '_', $_POST['title_column_' . $value] ?? '');
+
+                                    if (!Security::isValidIdentifier($newColTitle)) {
+                                        continue;
+                                    }
+
+                                    /*=============================================
+                                     * Crear nuevas columnas
+                                     * =============================================*/
+
+                                    $url =
+                                        'columns?token='
+                                        . $_SESSION['admin']->token_admin
+                                        . '&table=admins&suffix=admin';
+                                    $method = 'POST';
+                                    $data = array(
+                                        'id_module_column' => $createModule->results->lastId,
+                                        'title_column' => $newColTitle,
+                                        'alias_column' => $_POST['alias_column_' . $value],
+                                        'type_column' => $_POST['type_column_' . $value],
+                                        'visible_column' => $_POST['visible_column_' . $value],
+                                        'date_created_column' => date('Y-m-d'),
+                                    );
+
+                                    $createColumn = CurlController::request($url, $method, $data);
+
+                                    if ($createColumn->status == 200) {
+                                        $type = TemplateController::typeColumn($_POST['type_column_' . $value]);
+
                                         /*=============================================
-                                         * Crear nuevas columnas
+                                         * Crear columnas en BD MySQL
                                          * =============================================*/
 
-                                        $url =
-                                            'columns?token='
-                                            . $_SESSION['admin']->token_admin
-                                            . '&table=admins&suffix=admin';
-                                        $method = 'POST';
-                                        $data = array(
-                                            'id_module_column' => $createModule->results->lastId,
-                                            'title_column' => str_replace(' ', '_', $_POST['title_column_' . $value]),
-                                            'alias_column' => $_POST['alias_column_' . $value],
-                                            'type_column' => $_POST['type_column_' . $value],
-                                            'visible_column' => $_POST['visible_column_' . $value],
-                                            'date_created_column' => date('Y-m-d'),
-                                        );
-
-                                        $createColumn = CurlController::request($url, $method, $data);
-
-                                        if ($createColumn->status == 200) {
-                                            $type = TemplateController::typeColumn($_POST['type_column_' . $value]);
-
-                                            /*=============================================
-                                             * Crear columnas en BD MySQL
-                                             * =============================================*/
-
-                                            if ($key == 0) {
-                                                $after = 'id_' . $fields['suffix_module'];
-                                            } else {
-                                                $after = str_replace(
-                                                    ' ',
-                                                    '_',
-                                                    $_POST['title_column_' . $indexColumns[$key - 1]],
-                                                );
+                                        if ($key == 0) {
+                                            $after = 'id_' . $fields['suffix_module'];
+                                        } else {
+                                            $prevTitle = str_replace(' ', '_', $_POST['title_column_' . $indexColumns[$key - 1]] ?? '');
+                                            if (!Security::isValidIdentifier($prevTitle)) {
+                                                continue;
                                             }
+                                            $after = $prevTitle;
+                                        }
 
-                                            $sqlCreateColumns =
-                                                'ALTER TABLE '
-                                                . str_replace(' ', '_', $fields['title_module'])
-                                                . ' ADD '
-                                                . str_replace(' ', '_', $_POST['title_column_' . $value])
-                                                . ' '
-                                                . $type
-                                                . ' AFTER '
-                                                . $after;
+                                        $sqlCreateColumns =
+                                            'ALTER TABLE '
+                                            . $title_module
+                                            . ' ADD '
+                                            . $newColTitle
+                                            . ' '
+                                            . $type
+                                            . ' AFTER '
+                                            . $after;
 
                                             $stmtCreateColumns =
                                                 InstallController::connect()->prepare($sqlCreateColumns);

@@ -5,6 +5,8 @@
 
       <form method="POST" class="needs-validation" novalidate>
 
+      <?= \App\Http\Security::csrfField() ?>
+
         <!-- Modal Header -->
         <div class="modal-header">
           <h4 class="modal-title text-capitalize">Páginas</h4>

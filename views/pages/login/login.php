@@ -32,7 +32,9 @@ if(isset($_GET["scode"])){
 		<div class="card border-0 rounded shadow p-4 w-25" style="min-width:320px !important">
 			
 			<form method="POST" class="needs-validation" novalidate>
-				
+
+				<?= \App\Http\Security::csrfField() ?>
+
 				<h3 class="pt-3 text-center">
 					<?php echo $admin->symbol_admin ?> <?php echo $admin->title_admin ?>
 				</h3>
@@ -158,6 +160,8 @@ Modal para recuperar contraseña
     <div class="modal-content rounded">
 
     <form method="post" class="needs-validation" novalidate>
+
+      <?= \App\Http\Security::csrfField() ?>
 
       <!-- Modal Header -->
       <div class="modal-header">
