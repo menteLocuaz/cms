@@ -1,5 +1,9 @@
 <?php
 
+use App\Services\ThumbnailService;
+use App\Support\ColumnTypeResolver;
+use App\Support\StringHelper;
+
 /*=============================================
 Traemos columnas de la tabla
 =============================================*/
@@ -445,7 +449,7 @@ Cargamos el módulo tabla
 
 									    	foreach ($typeArray as $num => $elem){
 										
-												echo '<span class="badge badge-sm badge-default rounded bg-dark py-1 px-2 mx-1 mt-1 border small">'.TemplateController::reduceText($elem,25).'</span>';
+												echo '<span class="badge badge-sm badge-default rounded bg-dark py-1 px-2 mx-1 mt-1 border small">'.StringHelper::reduce($elem,25).'</span>';
 
 											}
 
@@ -469,7 +473,7 @@ Cargamos el módulo tabla
 
 										}else if($item->type_column == "link"){
 
-									    	echo '<a href="'.$value[$item->title_column].'" target="_blank" class="badge badge-default border rounded bg-indigo">'.TemplateController::reduceText(urldecode($value[$item->title_column]), 20).'</a>';
+									    	echo '<a href="'.$value[$item->title_column].'" target="_blank" class="badge badge-default border rounded bg-indigo">'.StringHelper::reduce(urldecode($value[$item->title_column]), 20).'</a>';
 
 										/*=============================================
 										Contenido tipo Color
@@ -526,7 +530,7 @@ Cargamos el módulo tabla
 
 										}else{
 
-			        						echo TemplateController::reduceText(urldecode($value[$item->title_column]),25); 
+			        						echo StringHelper::reduce(urldecode($value[$item->title_column]),25); 
 
 			        					}
 

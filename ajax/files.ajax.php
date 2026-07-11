@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 use App\Controllers\CurlController;
-use App\Controllers\TemplateController;
 use App\Http\Security;
+use App\Services\ThumbnailService;
+use App\Support\StringHelper;
 
 define('BASE_PATH', dirname(__DIR__));
 
@@ -20,6 +21,22 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once BASE_PATH . "/vendor/autoload.php";
 
 Security::requireAdminAjax();
+
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+
+/**
+ * Emite una respuesta JSON consistente y termina la ejecución.
+ * Garantiza que ningún output buffer contaminado o warning se cuele
+ * después del JSON (causa típica de "JSON.parse: unexpected character").
+ */
+function respondJson(array $payload, int $statusCode = 200): never
+{
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 class FilesController{
 
@@ -53,16 +70,10 @@ class FilesController{
 
 			if($this->file["size"] > $folder->max_upload_folder){
 
-				$response = array(
-
+				respondJson([
 					"status" => 404,
-					"error" => "Los archivos que pesan más de ".($folder->max_upload_folder/1000000)."MB no suben al servidor ".$folder->name_folder
-
-				);
-
-				echo json_encode($response);
-
-				return;
+					"error" => "Los archivos que pesan más de ".($folder->max_upload_folder/1000000)."MB no suben al servidor ".$folder->name_folder,
+				], 404);
 			}
 
 			/*=============================================
@@ -120,26 +131,38 @@ class FilesController{
 						Devolvemos la información a javascript
 						=============================================*/
 
-						$response = array(
-
+						respondJson([
 							"status" => 200,
 							"id_file" => $uploadData->results->lastId,
 							"link" => $fields["link_file"],
-							"reduce_link" => TemplateController::reduceText($fields["link_file"],35)."...",
-							"date" => $fields["date_created_file"].", ".date("H:m:s")
-
-						);
-
-						echo json_encode($response);
+							"reduce_link" => StringHelper::reduce($fields["link_file"], 35) . "...",
+							"date" => $fields["date_created_file"].", ".date("H:i:s"),
+						]);
 
 					}
 
+					respondJson([
+						"status" => 500,
+						"error" => "No se pudo registrar el archivo en la API",
+					], 500);
 				}
 
+				respondJson([
+					"status" => 500,
+					"error" => "No se pudo mover el archivo subido",
+				], 500);
 			}
-		
+
+			respondJson([
+				"status" => 404,
+				"error" => "Folder no encontrado",
+			], 404);
 		}
-	
+
+		respondJson([
+			"status" => 500,
+			"error" => "Respuesta inesperada del servidor de carpetas",
+		], 500);
 	}
 
 	/*=============================================
@@ -185,8 +208,10 @@ class FilesController{
 
 					if($folders->status == 200){
 
-						echo $folders->status;
+						respondJson(["status" => 200, "total_folder" => $totalSize]);
 					}
+
+					respondJson(["status" => 500, "error" => "No se pudo actualizar el folder"], 500);
 				}
 			}
 		}
@@ -276,9 +301,10 @@ class FilesController{
 
 		if($updateFolder->status == 200 && $deleteFile->status == 200){
 
-			echo $deleteFile->status;
+			respondJson(["status" => 200]);
 		}
 
+		respondJson(["status" => 500, "error" => "No se pudo eliminar el archivo"], 500);
 	}
 
 	/*=============================================
@@ -299,8 +325,10 @@ class FilesController{
 
 		if($update->status == 200){
 
-			echo $update->status;
-		} 
+			respondJson(["status" => 200]);
+		}
+
+		respondJson(["status" => 500, "error" => "No se pudo actualizar el nombre"], 500);
 	}
 
 	/*=============================================
@@ -419,7 +447,7 @@ class FilesController{
 				Organizar la vista de la lista
 				=============================================*/
 
-				$pathList = TemplateController::returnThumbnailList($value);
+				$pathList = (new ThumbnailService())->forList($value);
 
 				$htmlList .= '<tr style="height:100px">
 
@@ -442,7 +470,7 @@ class FilesController{
 
 						<td class="align-middle">
 							<a href="'.$value->link_file.'" target="_blank">
-								'.TemplateController::reduceText($value->link_file,35).'...
+								'.StringHelper::reduce($value->link_file,35).'...
 								<i class="bi bi-box-arrow-up-right ps-2 btn"></i>
 							</a>
 						</td>
@@ -462,7 +490,7 @@ class FilesController{
 				Organizar la vista de la cuadrícula
 				=============================================*/
 
-				$pathGrid = TemplateController::returnThumbnailGrid($value);
+				$pathGrid = (new ThumbnailService())->forGrid($value);
 
 				$htmlGrid .= '<div class="col">
 	 			
@@ -528,31 +556,19 @@ class FilesController{
 
 				if($countFiles == count($load)){
 
-					$response = array(
-
+					respondJson([
 						"htmlList" => $htmlList,
-						"htmlGrid" => $htmlGrid
-
-					);
-
-					echo json_encode($response);
-
+						"htmlGrid" => $htmlGrid,
+					]);
 				}
 			}
 
-		}else{
-
-			$response = array(
-
-				"htmlList" => $htmlList,
-				"htmlGrid" => $htmlGrid
-
-			);
-
-			echo json_encode($response);
-
 		}
 
+		respondJson([
+			"htmlList" => $htmlList,
+			"htmlGrid" => $htmlGrid,
+		]);
 	}
 
 

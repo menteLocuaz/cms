@@ -2,12 +2,14 @@
 LIST
 ======================================-->
 
+<?php use App\Services\ThumbnailService; use App\Support\StringHelper; ?>
+
 <div class="table-responsive modules" id="list">
-	
+
 	<table class="table mb-5">
-		
+
 		<thead>
-			
+
 			<th>Preview</th>
 			<th>Name</th>
 			<th>Size</th>
@@ -26,9 +28,9 @@ LIST
 
 				<?php foreach ($files as $key => $value): ?>
 
-					<?php 
+					<?php
 
-					$path = TemplateController::returnThumbnailList($value);
+					$path = (new ThumbnailService())->forList($value);
 
 					?>
 
@@ -53,7 +55,7 @@ LIST
 
 						<td class="align-middle">
 							<a href="<?php echo $value->link_file ?>" target="_blank">
-								<?php echo TemplateController::reduceText($value->link_file,35) ?>...
+								<?php echo StringHelper::reduce($value->link_file, 35) ?>...
 								<i class="bi bi-box-arrow-up-right ps-2 btn"></i>
 							</a>
 						</td>

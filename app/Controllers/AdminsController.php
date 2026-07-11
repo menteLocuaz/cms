@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Http\Security;
+use App\Services\MailService;
+use App\Services\PasswordService;
 
 class AdminsController
 {
@@ -71,7 +73,7 @@ class AdminsController
                  * Generar y enviar código de seguridad al correo
                  * =============================================*/
                 /*
-                 * $securityCode = TemplateController::genPassword(6);
+                 * $securityCode = (new PasswordService())->generate(6);
                  *
                  * $url = "admins?id=".$login->results[0]->id_admin."&nameId=id_admin&token=no&except=scode_admin";
                  * $method = "PUT";
@@ -87,7 +89,7 @@ class AdminsController
                  * $message = '<h4 style="font-weight: 100; color:#999; padding:0px 20px"><strong>Su código de seguridad: '.$securityCode.'</strong></4><h4 style="font-weight: 100; color:#999; padding:0px 20px">Ingrese nuevamente al sitio con este código de seguridad</4>';
                  * $link = $_SERVER["REQUEST_SCHEME"]."://".$_SERVER["SERVER_NAME"]."?scode=".base64_encode($login->results[0]->email_admin);
                  *
-                 * $sendEmail = TemplateController::sendEmail($subject, $email, $title, $message, $link);
+                 * $sendEmail = MailService::fromEnv()->send($subject, $email, $title, $message, $link);
                  *
                  * if($sendEmail == "ok"){
                  *
@@ -333,7 +335,7 @@ class AdminsController
             $admin = CurlController::request($url, $method, $fields);
 
             if ($admin->status == 200) {
-                $newPassword = TemplateController::genPassword(11);
+                $newPassword = (new PasswordService())->generate(11);
                 $crypt = Security::hashPassword($newPassword);
 
                 /*=============================================
@@ -355,7 +357,7 @@ class AdminsController
                         . '</strong></4><h4 style="font-weight: 100; color:#999; padding:0px 20px">Ingrese nuevamente al sitio con esta contraseña y recuerde cambiarla</4>';
                     $link = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'];
 
-                    $sendEmail = TemplateController::sendEmail($subject, $email, $title, $message, $link);
+                    $sendEmail = MailService::fromEnv()->send($subject, $email, $title, $message, $link);
 
                     if ($sendEmail == 'ok') {
                         echo '<script>

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Controllers\CurlController;
-use App\Controllers\TemplateController;
 use App\Http\Security;
+use App\Support\StringHelper;
 
 if (session_status() === PHP_SESSION_NONE) {
 	session_start();
@@ -13,6 +13,17 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 Security::requireAdminAjax();
+
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+
+function respondJson(array $payload, int $statusCode = 200): never
+{
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 class DynamicTablesController{
 
@@ -44,13 +55,11 @@ class DynamicTablesController{
 
 				if($countDelete == count($idItems)){
 
-					echo 200;
-
+					respondJson(["status" => 200]);
 				}
-
 			}
 
-    	}		
+    	}
 
 	}
 
@@ -271,7 +280,7 @@ class DynamicTablesController{
 
 							    	foreach ($typeArray as $num => $elem){
 								
-										$HTMLTable .= '<span class="badge badge-sm badge-default rounded bg-dark py-1 px-2 mx-1 mt-1 border small">'.TemplateController::reduceText($elem,25).'</span>';
+										$HTMLTable .= '<span class="badge badge-sm badge-default rounded bg-dark py-1 px-2 mx-1 mt-1 border small">'.StringHelper::reduce($elem,25).'</span>';
 
 									}
 
@@ -295,7 +304,7 @@ class DynamicTablesController{
 
 								}else if($item->type_column == "link"){
 
-							    	$HTMLTable .= '<a href="'.$value[$item->title_column].'" target="_blank" class="badge badge-default border rounded bg-indigo">'.TemplateController::reduceText(urldecode($value[$item->title_column]), 20).'</a>';
+							    	$HTMLTable .= '<a href="'.$value[$item->title_column].'" target="_blank" class="badge badge-default border rounded bg-indigo">'.StringHelper::reduce(urldecode($value[$item->title_column]), 20).'</a>';
 
 								/*=============================================
 								Contenido tipo Color
@@ -350,7 +359,7 @@ class DynamicTablesController{
 
 								}else{
 
-	        						$HTMLTable .= TemplateController::reduceText(urldecode($value[$item->title_column]),25); 
+	        						$HTMLTable .= StringHelper::reduce(urldecode($value[$item->title_column]),25); 
 
 	        					}
 
@@ -392,7 +401,7 @@ class DynamicTablesController{
     		"totalPages" => $totalPages
     	);
 
-    	echo json_encode($response);
+    	respondJson($response);
 
 
 	}
@@ -434,7 +443,7 @@ class DynamicTablesController{
 
     			if($countChange == count($idItems)){
 
-    				echo 200;
+    				respondJson(["status" => 200]);
     			}
     		}  		
 
@@ -469,7 +478,7 @@ class DynamicTablesController{
 
     			if($countSelect == count($idItems)){
 
-    				echo 200;
+    				respondJson(["status" => 200]);
     			}
     		}  		
 
@@ -496,7 +505,7 @@ class DynamicTablesController{
 
 		if($updateItem->status == 200){
 
-			echo 200;
+			respondJson(["status" => 200]);
 			
 		}  		
 	
