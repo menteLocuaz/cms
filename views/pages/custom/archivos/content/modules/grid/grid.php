@@ -10,9 +10,9 @@ GRID
 
 		<?php foreach ($files as $key => $value): ?>
 
-			<?php 
+			<?php
 
-			$path = TemplateController::returnThumbnailGrid($value);
+			$path = (new ThumbnailService())->forGrid($value);
 
 			?>
 

@@ -13,6 +13,17 @@ require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 Security::requireAdminAjax();
 
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+
+function respondJson(array $payload, int $statusCode = 200): never
+{
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 class PagesAjax{
 
 	/*=============================================
@@ -33,8 +44,7 @@ class PagesAjax{
 
 		if($updateOrder->status == 200){
 
-			echo $updateOrder->status;
-		
+			respondJson(["status" => 200]);
 		}
 
 	}
@@ -59,8 +69,7 @@ class PagesAjax{
 
 		if($getModule->status == 200){
 
-			echo "error";
-		
+			respondJson(["status" => 400, "error" => "La página tiene módulos vinculados"], 400);
 		}else{
 
 			$url = "pages?id=".base64_decode($this->idPageDelete)."&nameId=id_page&token=".$this->token."&table=admins&suffix=admin";
@@ -71,7 +80,7 @@ class PagesAjax{
 
 			if($deletePage->status == 200){
 
-				echo $deletePage->status;
+				respondJson(["status" => 200]);
 			}
 
 		}

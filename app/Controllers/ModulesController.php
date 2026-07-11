@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Http\Security;
+use App\Support\ColumnTypeResolver;
 use PDO;
 
 class ModulesController
@@ -92,7 +93,7 @@ class ModulesController
                                         continue;
                                     }
 
-                                    $type = TemplateController::typeColumn($_POST['type_column_' . $value]);
+                                    $type = ColumnTypeResolver::toSqlDefinition($_POST['type_column_' . $value]);
 
                                     /*=============================================
                                      * Actualizar la tabla columnas
@@ -431,7 +432,7 @@ class ModulesController
                                     $createColumn = CurlController::request($url, $method, $data);
 
                                     if ($createColumn->status == 200) {
-                                        $type = TemplateController::typeColumn($_POST['type_column_' . $value]);
+                                        $type = ColumnTypeResolver::toSqlDefinition($_POST['type_column_' . $value]);
 
                                         /*=============================================
                                          * Crear columnas en BD MySQL

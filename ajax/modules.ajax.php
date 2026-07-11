@@ -14,6 +14,17 @@ require_once dirname(__DIR__) . "/vendor/autoload.php";
 
 Security::requireAdminAjax();
 
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store');
+
+function respondJson(array $payload, int $statusCode = 200): never
+{
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 class ModulesAjax{
 
 	/*=============================================
@@ -37,8 +48,8 @@ class ModulesAjax{
 
 		if($getColumn->status == 200){
 
-			echo "error";
-		
+			respondJson(["status" => 400, "error" => "El módulo tiene columnas vinculadas"], 400);
+
 		}else{
 
 			/*=============================================
@@ -80,7 +91,7 @@ class ModulesAjax{
 
 			if($deleteModule->status == 200){
 
-				echo $deleteModule->status;
+				respondJson(["status" => 200]);
 			}
 
 		}

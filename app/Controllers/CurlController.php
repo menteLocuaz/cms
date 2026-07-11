@@ -25,10 +25,11 @@ class CurlController
         $lastError = null;
         $lastStatus = 0;
         $startedAt = microtime(true);
-        $maxAttempts = self::MAX_RETRIES + 1;
+        $remaining = self::MAX_RETRIES + 1;
 
-        while ($attempts < $maxAttempts) {
+        while ($remaining > 0) {
             $attempts++;
+            $remaining--;
 
             $curl = curl_init();
 
@@ -54,7 +55,6 @@ class CurlController
             $curlError = curl_error($curl);
             $curlErrno = curl_errno($curl);
             $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            curl_close($curl);
 
             if ($response !== false && $response !== '') {
                 $decoded = json_decode($response);
@@ -96,7 +96,7 @@ class CurlController
                 $url,
             ));
 
-            if ($attempts >= $maxAttempts || !self::shouldRetry($curlErrno, $httpCode)) {
+            if ($attempts >= self::MAX_RETRIES + 1 || !self::shouldRetry($curlErrno, $httpCode)) {
                 break;
             }
 
@@ -142,7 +142,6 @@ class CurlController
         $response = curl_exec($curl);
         $curlError = curl_error($curl);
         $curlErrno = curl_errno($curl);
-        curl_close($curl);
 
         if ($response === false || $response === '') {
             error_log(sprintf('CurlController::chatGPT failed (errno=%d): %s', $curlErrno, $curlError));
