@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Http\Security;
 use PDO;
 use PDOException;
 
@@ -56,6 +57,8 @@ class InstallController
     public function install()
     {
         if (isset($_POST['email_admin'])) {
+            Security::requireCsrf();
+
             echo '<script>
 					fncMatPreloader("on");
 					fncSweetAlert("loading", "Instalando...", "");
@@ -195,7 +198,7 @@ class InstallController
                 $method = 'POST';
                 $fields = array(
                     'email_admin' => trim($_POST['email_admin']),
-                    'password_admin' => trim($_POST['password_admin']),
+                    'password_admin' => Security::hashPassword(trim($_POST['password_admin'])),
                     'rol_admin' => 'superadmin',
                     'permissions_admin' => '{"todo":"on"}',
                     'title_admin' => trim($_POST['title_admin']),
@@ -481,9 +484,14 @@ class InstallController
 
     public static function getTable($table)
     {
+        if (!Security::isValidIdentifier((string) $table)) {
+            return 404;
+        }
+
         $validate = InstallController::connect()
             ->query(
-                "SELECT column_name AS item FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '$table'",
+                'SELECT column_name AS item FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = '
+                . InstallController::connect()->quote((string) $table),
             )
             ->fetchAll(PDO::FETCH_OBJ);
 

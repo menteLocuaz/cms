@@ -4,19 +4,28 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Http\Security;
+
 class PagesController
 {
     public function managePage()
     {
         if (isset($_POST['title_page'])) {
+            Security::requireCsrf();
+
             /*=============================================
              * Editar Página
              * =============================================*/
 
             if (isset($_POST['id_page'])) {
+                $verifiedId = Security::verifyId($_POST['id_page']);
+                if ($verifiedId === null) {
+                    $verifiedId = base64_decode($_POST['id_page']);
+                }
+
                 $url =
                     'pages?id='
-                    . base64_decode($_POST['id_page'])
+                    . $verifiedId
                     . '&nameId=id_page&token='
                     . $_SESSION['admin']->token_admin
                     . '&table=admins&suffix=admin';

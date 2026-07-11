@@ -5,7 +5,9 @@
 		<div class="card border-0 rounded shadow p-5">
 			
 			<form method="POST" class="needs-validation" novalidate>
-				
+
+				<?= \App\Http\Security::csrfField() ?>
+
 				<h3 class="pt-3 text-center">Instalación Dashboard</h3>
 
 				<hr>

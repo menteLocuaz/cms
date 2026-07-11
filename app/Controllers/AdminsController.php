@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Http\Security;
+
 class AdminsController
 {
     /*=============================================
@@ -13,6 +15,8 @@ class AdminsController
     public function login()
     {
         if (isset($_POST['email_admin'])) {
+            Security::requireCsrf();
+
             echo '<script>
 
 				fncMatPreloader("on");
@@ -144,6 +148,8 @@ class AdminsController
     public function securityCode()
     {
         if (isset($_POST['scode_admin'])) {
+            Security::requireCsrf();
+
             echo '
 
 			<script>
@@ -240,12 +246,11 @@ class AdminsController
                  * Subir cambios a base de datos
                  * =============================================*/
 
-                $url =
-                    'admins?id='
-                    . $admin->results[0]->id_admin
-                    . '&nameId=id_admin&token='
-                    . $_SESSION['admin']->token_admin
-                    . '&table=admins&suffix=admin';
+                $url = \App\Support\UrlBuilder::adminAction(
+                    'admins',
+                    (string) $admin->results[0]->id_admin,
+                    'id_admin',
+                );
                 $method = 'PUT';
 
                 if ($admin->results[0]->rol_admin == 'superadmin') {
@@ -308,6 +313,8 @@ class AdminsController
     public function resetPassword()
     {
         if (isset($_POST['resetPassword'])) {
+            Security::requireCsrf();
+
             echo '<script>
 
 				fncMatPreloader("on");
@@ -327,7 +334,7 @@ class AdminsController
 
             if ($admin->status == 200) {
                 $newPassword = TemplateController::genPassword(11);
-                $crypt = crypt($newPassword, '$2a$07$azybxcags23425sdg23sdfhsd$');
+                $crypt = Security::hashPassword($newPassword);
 
                 /*=============================================
                  * Actualizar contraseña en base de datos

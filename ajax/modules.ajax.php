@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 use App\Controllers\CurlController;
 use App\Controllers\InstallController;
+use App\Http\Security;
+
+if (session_status() === PHP_SESSION_NONE) {
+	session_start();
+}
 
 require_once dirname(__DIR__) . "/vendor/autoload.php";
+
+Security::requireAdminAjax();
 
 class ModulesAjax{
 
@@ -52,11 +59,12 @@ class ModulesAjax{
 					Eliminar la tabla de la BD en MySQL
 					=============================================*/
 
-					$sqlDestroyTable = "DROP TABLE ".$module->results[0]->title_module;
-
-					$stmtDestroyTable = InstallController::connect()->prepare($sqlDestroyTable);
-
-					$stmtDestroyTable->execute();
+					$tableToDrop = (string) $module->results[0]->title_module;
+					if (Security::isValidIdentifier($tableToDrop)) {
+						$sqlDestroyTable = "DROP TABLE ".$tableToDrop;
+						$stmtDestroyTable = InstallController::connect()->prepare($sqlDestroyTable);
+						$stmtDestroyTable->execute();
+					}
 				}
 			}
 

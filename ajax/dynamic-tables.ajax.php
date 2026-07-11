@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 use App\Controllers\CurlController;
 use App\Controllers\TemplateController;
+use App\Http\Security;
+
+if (session_status() === PHP_SESSION_NONE) {
+	session_start();
+}
 
 require_once dirname(__DIR__) . "/vendor/autoload.php";
+
+Security::requireAdminAjax();
 
 class DynamicTablesController{
 

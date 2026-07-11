@@ -3,8 +3,15 @@
 declare(strict_types=1);
 
 use App\Controllers\CurlController;
+use App\Http\Security;
 
-require_once dirname(__DIR__) . "/vendor/autoload.php";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+Security::requireAdminAjax();
 
 class DynamicFormsController
 {

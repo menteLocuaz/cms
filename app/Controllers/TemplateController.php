@@ -23,9 +23,6 @@ class TemplateController
         if (!class_exists('CurlController', false)) {
             class_alias(\App\Controllers\CurlController::class, 'CurlController');
         }
-        if (!class_exists('TemplateController', false)) {
-            class_alias(\App\Controllers\TemplateController::class, 'TemplateController');
-        }
         if (!class_exists('AdminsController', false)) {
             class_alias(\App\Controllers\AdminsController::class, 'AdminsController');
         }

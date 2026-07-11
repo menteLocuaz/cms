@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 use App\Controllers\CurlController;
 use App\Controllers\TemplateController;
+use App\Http\Security;
 
 define('BASE_PATH', dirname(__DIR__));
 
-ini_set("display_errors",1);
+$appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'production';
+ini_set('display_errors', $appEnv === 'local' || $appEnv === 'development' ? '1' : '0');
 ini_set("log_errors",1);
 ini_set("error_log", BASE_PATH."/php_error_log");
 
+if (session_status() === PHP_SESSION_NONE) {
+	session_start();
+}
+
 require_once BASE_PATH . "/vendor/autoload.php";
+
+Security::requireAdminAjax();
 
 class FilesController{
 
@@ -67,7 +75,7 @@ class FilesController{
 			Creamos el nombre del archivo
 			=============================================*/
 
-			$fileName = uniqid().getdate()["seconds"].".".end($extension);
+			$fileName = bin2hex(random_bytes(8)).".".end($extension);
 	
 			/*=============================================
 			Subiendo archivos al servidor propio
@@ -232,10 +240,18 @@ class FilesController{
 		if($this->idFolderDelete == 1){
 
 			/*=============================================
-			Borrar archivo del servidor
+			Borrar archivo del servidor (whitelist + realpath)
 			=============================================*/
-			unlink(str_replace($_SERVER["HTTP_ORIGIN"],"..",$getFile->link_file));
-			
+			$uploadsDir = realpath(BASE_PATH . "/views/assets/files");
+			$fileName = basename((string) ($getFile->link_file ?? ""));
+			if ($uploadsDir !== false && $fileName !== "") {
+				$candidate = $uploadsDir . DIRECTORY_SEPARATOR . $fileName;
+				$resolved = realpath($candidate);
+				if ($resolved !== false && str_starts_with($resolved, $uploadsDir . DIRECTORY_SEPARATOR)) {
+					@unlink($resolved);
+				}
+			}
+
 		}
 
 		/*=============================================

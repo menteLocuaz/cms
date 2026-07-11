@@ -5,6 +5,8 @@
 
       <form method="POST" class="needs-validation" novalidate>
 
+      <?= \App\Http\Security::csrfField() ?>
+
         <!-- Modal Header -->
         <div class="modal-header">
           <h4 class="modal-title text-capitalize">Perfil <?php echo $_SESSION["admin"]->rol_admin ?></h4>
