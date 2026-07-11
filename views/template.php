@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\DashboardConfig;
+use App\Http\Route;
+
 /*=============================================
  * Iniciar variables de sesión
  * =============================================*/
@@ -12,40 +15,11 @@ if (!defined('DIR')) {
 }
 
 /*=============================================
- * Capturar parámetros de la url
+ * URL actual y configuración del dashboard
  * =============================================*/
 
-$routesArray = explode('/', $_SERVER['REQUEST_URI']);
-
-array_shift($routesArray);
-
-foreach ($routesArray as $key => $value) {
-    $routesArray[$key] = explode('?', $value)[0];
-}
-
-/*=============================================
- * Validar si existe la base de datos con la tabla admins
- * =============================================*/
-
-$url = 'admins';
-$method = 'GET';
-$fields = array();
-
-$adminTable = CurlController::request($url, $method, $fields);
-
-if (
-    !is_object($adminTable)
-    || !isset($adminTable->status)
-    || $adminTable->status != 200
-    || !isset($adminTable->results[0])
-    || !is_object($adminTable->results[0])
-) {
-    $admin = null;
-} else {
-    $admin = $adminTable->results[0];
-
-    // echo '<pre>'; print_r($admin); echo '</pre>';
-}
+$route = Route::current();
+$admin = DashboardConfig::load();
 
 ?>
 
@@ -268,11 +242,11 @@ if (
 				MAIN PAGE
 				===============================================-->
 
-				<?php if (!empty($routesArray[0])): ?>
+				<?php if (!$route->isEmpty()): ?>
 
-					<?php if ($routesArray[0] == 'logout'): ?>
+					<?php if ($route->first() == 'logout'): ?>
 
-						<?php include 'pages/' . $routesArray[0] . '/' . $routesArray[0] . '.php'; ?>
+						<?php include 'pages/' . $route->first() . '/' . $route->first() . '.php'; ?>
 
 					<?php else: ?>
 
@@ -284,8 +258,8 @@ if (
     						$_SESSION['admin']->rol_admin == 'superadmin'
     						|| $_SESSION['admin']->rol_admin == 'admin'
     						|| $_SESSION['admin']->rol_admin == 'editor'
-    						&& isset(json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$routesArray[0]])
-    						&& json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$routesArray[0]] == 'on'
+    						&& isset(json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$route->first()])
+    						&& json_decode(urldecode($_SESSION['admin']->permissions_admin), true)[$route->first()] == 'on'
 						): ?>
 
 							<!--=========================================
@@ -294,7 +268,7 @@ if (
 
 							<?php
 
-							$url = 'pages?linkTo=url_page&equalTo=' . $routesArray[0];
+							$url = 'pages?linkTo=url_page&equalTo=' . $route->first();
 							$method = 'GET';
 							$fields = array();
 
@@ -303,7 +277,7 @@ if (
 							if ($page->status == 200 && $page->results[0]->type_page == 'modules') {
     							include 'pages/dynamic/dynamic.php';
 							} else if ($page->status == 200 && $page->results[0]->type_page == 'custom') {
-    							include 'pages/custom/' . $routesArray[0] . '/' . $routesArray[0] . '.php';
+    							include 'pages/custom/' . $route->first() . '/' . $route->first() . '.php';
 							} else {
     							include 'pages/404/404.php';
 							}
@@ -367,7 +341,9 @@ if (
 
 							$page = CurlController::request($url, $method, $fields);
 
-							$routesArray[0] = array_keys(json_decode(urldecode($_SESSION['admin']->permissions_admin), true))[0];
+							$route = Route::fromFirstSegment(
+								array_keys(json_decode(urldecode($_SESSION['admin']->permissions_admin), true))[0],
+							);
 
 							if ($page->status == 200 && $page->results[0]->type_page == 'modules') {
     							include 'pages/dynamic/dynamic.php';

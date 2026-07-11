@@ -66,7 +66,7 @@ $totalColumns = 3;
 Cargamos el gestor de datos
 =============================================-->
 
-<?php if (!empty($routesArray[1]) && $routesArray[1] == "manage"): ?>
+<?php if ($route->segment(1) === "manage"): ?>
 
 
 	<?php 

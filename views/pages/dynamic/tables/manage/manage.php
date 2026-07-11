@@ -6,10 +6,10 @@ Capturar datos para editar
 
 $data = null;
 
-if(!empty($routesArray[2])){
-	
+if($route->segment(2) !== null){
 
-	$url = $module->title_module."?linkTo=id_".$module->suffix_module."&equalTo=".base64_decode($routesArray[2]);
+
+	$url = $module->title_module."?linkTo=id_".$module->suffix_module."&equalTo=".base64_decode($route->segment(2));
 	$method = "GET";
 	$fields = Array();
 
@@ -49,9 +49,9 @@ $block2 = count($module->columns) - $block1;
 
 			<input type="hidden" name="module" value='<?php echo json_encode($module) ?>'>
 
-			<?php if (!empty($data) && empty($routesArray[3])): ?>
-			
-				<input type="hidden" name="idItem" value="<?php echo $routesArray[2] ?>">	
+			<?php if (!empty($data) && $route->segment(3) === null): ?>
+
+				<input type="hidden" name="idItem" value="<?php echo $route->segment(2) ?>">
 							
 			<?php endif ?>
 

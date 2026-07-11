@@ -1,8 +1,8 @@
-<?php 
+<?php
 
-if (!empty($routesArray[0])){
+if (!$route->isEmpty()) {
 
-    $url = "relations?rel=modules,pages&type=module,page&linkTo=url_page&equalTo=".$routesArray[0];
+    $url = "relations?rel=modules,pages&type=module,page&linkTo=url_page&equalTo=".$route->first();
 
 }else{
 
@@ -90,7 +90,7 @@ if($modules->status == 200){
 
         <?php if ($_SESSION["admin"]->rol_admin == "superadmin"): ?>
 
-                <div class="text-center <?php if (!empty($routesArray[1]) && $routesArray[1] == "manage"): ?> d-none  <?php endif ?>">
+                <div class="text-center <?php if ($route->segment(1) === "manage"): ?> d-none  <?php endif ?>">
                 
                     <button class="btn btn-default bg-white border rounded btn-sm ms-3 menu-text mt-1 py-2 px-3 myModule" idPage="<?php echo $page->results[0]->id_page ?>">Agregar Módulo</button>
 
