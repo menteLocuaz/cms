@@ -18,16 +18,47 @@ declare(strict_types=1);
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-if (in_array($method, ['GET', 'HEAD'], true)) {
-    $filePath = __DIR__ . $uri;
+if (in_array($method, ['GET', 'HEAD'], true) && $uri !== '/' && is_file($filePath = __DIR__ . $uri)) {
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
-    if ($uri !== '/' && is_file($filePath)) {
-        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-
-        if ($extension !== 'php') {
-            return false;
-        }
+    if ($extension === 'php') {
+        require $filePath;
+        return true;
     }
+
+    $mimeTypes = [
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'mjs'   => 'application/javascript',
+        'json'  => 'application/json',
+        'map'   => 'application/json',
+        'svg'   => 'image/svg+xml',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'webp'  => 'image/webp',
+        'ico'   => 'image/x-icon',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
+        'otf'   => 'font/otf',
+        'eot'   => 'application/vnd.ms-fontobject',
+        'txt'   => 'text/plain',
+        'xml'   => 'application/xml',
+    ];
+
+    header('Content-Type: ' . ($mimeTypes[$extension] ?? 'application/octet-stream'));
+    header('Content-Length: ' . filesize($filePath));
+    header('Cache-Control: public, max-age=3600');
+    header('Connection: close');
+
+    if ($method === 'HEAD') {
+        return true;
+    }
+
+    readfile($filePath);
+    return true;
 }
 
 require __DIR__ . '/public/index.php';

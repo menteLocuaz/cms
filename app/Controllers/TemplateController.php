@@ -4,327 +4,288 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
-class TemplateController{
+class TemplateController
+{
+    /*=============================================
+     * Traemos la vista principal de la plantilla
+     * =============================================*/
 
-	/*=============================================
-	Traemos la vista principal de la plantilla
-	=============================================*/
+    public function index()
+    {
+        /*=============================================
+         * Aliases para vistas (compatibilidad con vistas
+         * que referencian controllers sin namespace)
+         * =============================================*/
 
-	public function index(){
+        if (!class_exists('CurlController', false)) {
+            class_alias(\App\Controllers\CurlController::class, 'CurlController');
+        }
+        if (!class_exists('TemplateController', false)) {
+            class_alias(\App\Controllers\TemplateController::class, 'TemplateController');
+        }
+        if (!class_exists('AdminsController', false)) {
+            class_alias(\App\Controllers\AdminsController::class, 'AdminsController');
+        }
+        if (!class_exists('PagesController', false)) {
+            class_alias(\App\Controllers\PagesController::class, 'PagesController');
+        }
+        if (!class_exists('ModulesController', false)) {
+            class_alias(\App\Controllers\ModulesController::class, 'ModulesController');
+        }
+        if (!class_exists('DynamicController', false)) {
+            class_alias(\App\Controllers\DynamicController::class, 'DynamicController');
+        }
+        if (!class_exists('InstallController', false)) {
+            class_alias(\App\Controllers\InstallController::class, 'InstallController');
+        }
 
-		/*=============================================
-		Aliases para vistas (compatibilidad con vistas
-		que referencian controllers sin namespace)
-		=============================================*/
+        include BASE_PATH . '/views/template.php';
+    }
 
-		if (!class_exists('CurlController', false)) {
-			class_alias(\App\Controllers\CurlController::class, 'CurlController');
-		}
-		if (!class_exists('TemplateController', false)) {
-			class_alias(\App\Controllers\TemplateController::class, 'TemplateController');
-		}
-		if (!class_exists('AdminsController', false)) {
-			class_alias(\App\Controllers\AdminsController::class, 'AdminsController');
-		}
-		if (!class_exists('PagesController', false)) {
-			class_alias(\App\Controllers\PagesController::class, 'PagesController');
-		}
-		if (!class_exists('ModulesController', false)) {
-			class_alias(\App\Controllers\ModulesController::class, 'ModulesController');
-		}
-		if (!class_exists('DynamicController', false)) {
-			class_alias(\App\Controllers\DynamicController::class, 'DynamicController');
-		}
-		if (!class_exists('InstallController', false)) {
-			class_alias(\App\Controllers\InstallController::class, 'InstallController');
-		}
+    /*=============================================
+     * Identificar el tipo de columna
+     * =============================================*/
 
-		include BASE_PATH . "/views/template.php";
+    public static function typeColumn($value)
+    {
+        if (
+            $value == 'text'
+            || $value == 'textarea'
+            || $value == 'image'
+            || $value == 'video'
+            || $value == 'file'
+            || $value == 'link'
+            || $value == 'select'
+            || $value == 'array'
+            || $value == 'color'
+            || $value == 'password'
+            || $value == 'email'
+        ) {
+            $type = 'TEXT NULL DEFAULT NULL';
+        }
 
-	}
+        if ($value == 'object') {
+            $type = "TEXT NULL DEFAULT '{}'";
+        }
 
-	/*=============================================
-	Identificar el tipo de columna
-	=============================================*/
+        if ($value == 'json') {
+            $type = "TEXT NULL DEFAULT '[]'";
+        }
 
-	static public function typeColumn($value){
+        if ($value == 'int' || $value == 'relations' || $value == 'order') {
+            $type = "INT NULL DEFAULT '0'";
+        }
 
-		if($value == "text" || 
-		   $value == "textarea" ||
-		   $value == "image" || 
-		   $value == "video" ||
-		   $value == "file" ||
-		   $value == "link" ||
-		   $value == "select" ||
-		   $value == "array" ||
-		   $value == "color" ||
-		   $value == "password" || 
-		   $value == "email"){
+        if ($value == 'boolean') {
+            $type = "INT NULL DEFAULT '1'";
+        }
 
-			$type = "TEXT NULL DEFAULT NULL";
-		}
+        if ($value == 'double' || $value == 'money') {
+            $type = "DOUBLE NULL DEFAULT '0'";
+        }
 
-		if($value == "object"){
+        if ($value == 'date') {
+            $type = 'DATE NULL DEFAULT NULL';
+        }
 
-			$type = "TEXT NULL DEFAULT '{}'";
-		}
+        if ($value == 'time') {
+            $type = 'TIME NULL DEFAULT NULL';
+        }
 
-		if($value == "json"){
+        if ($value == 'datetime') {
+            $type = 'DATETIME NULL DEFAULT NULL';
+        }
 
-			$type = "TEXT NULL DEFAULT '[]'";
+        if ($value == 'timestamp') {
+            $type = 'TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP';
+        }
 
-		}
+        if ($value == 'code' || $value == 'chatgpt') {
+            $type = 'LONGTEXT NULL DEFAULT NULL';
+        }
 
-		if($value == "int" || $value == "relations" || $value == "order"){
-	       
-	       	$type = "INT NULL DEFAULT '0'";
-		
-		}
+        return $type;
+    }
 
-		if($value == "boolean"){
-	       
-	       	$type = "INT NULL DEFAULT '1'";
-		
-		}
+    /*=============================================
+     * Función Reducir texto
+     * =============================================*/
 
-		if($value == "double" || $value == "money"){
-	       
-	       	$type = "DOUBLE NULL DEFAULT '0'";
-		
-		}
+    public static function reduceText($value, $limit)
+    {
+        if (strlen($value) > $limit) {
+            $value = substr($value, 0, $limit) . '...';
+        }
 
-		if($value == "date"){
-	       	
-	       	$type = "DATE NULL DEFAULT NULL";
-	    
-	    }
+        return $value;
+    }
 
-	    if($value == "time"){
-	       	
-	       	$type = "TIME NULL DEFAULT NULL";
-	    
-	    }
+    /*=============================================
+     * Devuelva la miniatura de la lista
+     * =============================================*/
 
-	    if($value == "datetime"){
-	      	
-	      	$type = "DATETIME NULL DEFAULT NULL";
-	    
-	    }
+    public static function returnThumbnailList($value)
+    {
+        /*=============================================
+         * Capturar miniatura imagen
+         * =============================================*/
 
-	    if($value == "timestamp"){
-	      	
-	      	$type = "TIMESTAMP on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP";
-	    }
+        if (explode('/', $value->type_file)[0] == 'image') {
+            $path =
+                '<img src="'
+                . $value->link_file
+                . '" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        }
 
-	    if($value == "code" || $value == "chatgpt"){
+        /*=============================================
+         * Capturar miniatura video
+         * =============================================*/
 
-	       	$type = "LONGTEXT NULL DEFAULT NULL";
-	    
-	    }
-
-	    return $type;
-
-	}
-
-	/*=============================================
-	Función Reducir texto
-	=============================================*/
-
-	static public function reduceText($value, $limit){
-
-		if(strlen($value) > $limit){
-
-			$value = substr($value, 0, $limit)."...";
-		}
-
-		return $value;
-	}
-
-	/*=============================================
-	Devuelva la miniatura de la lista
-	=============================================*/
-
-	static public function returnThumbnailList($value){
-
-		/*=============================================
-		Capturar miniatura imagen
-		=============================================*/
-
-		if(explode("/",$value->type_file)[0] == "image"){
-
-			$path = '<img src="'.$value->link_file.'" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
-
-		}
-
-		/*=============================================
-		Capturar miniatura video
-		=============================================*/
-
-		if(explode("/",$value->type_file)[0] == "video" && $value->id_folder_file != 4){
-
-			if(explode("/",$value->type_file)[1] == "mp4"){
-
-				$path = '<video class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">
-				<source src="'.$value->link_file.'" type="'.$value->type_file.'">
+        if (explode('/', $value->type_file)[0] == 'video' && $value->id_folder_file != 4) {
+            if (explode('/', $value->type_file)[1] == 'mp4') {
+                $path = '<video class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">
+				<source src="' . $value->link_file . '" type="' . $value->type_file . '">
 				</video>';
+            } else {
+                $path = '<img src="/views/assets/img/multimedia.png" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+            }
+        }
 
-			}else{
+        if (explode('/', $value->type_file)[0] == 'video' && $value->id_folder_file == 4) {
+            $path =
+                '<img src="'
+                . $value->thumbnail_vimeo_file
+                . '" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        }
 
-				$path = '<img src="/views/assets/img/multimedia.png" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
-			}
+        /*=============================================
+         * Capturar miniatura audio
+         * =============================================*/
 
-		}
+        if (explode('/', $value->type_file)[0] == 'audio') {
+            $path = '<img src="/views/assets/img/multimedia.png" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        }
 
-		if(explode("/",$value->type_file)[0] == "video" && $value->id_folder_file == 4){
+        /*=============================================
+         * Capturar miniatura pdf
+         * =============================================*/
 
-			$path = '<img src="'.$value->thumbnail_vimeo_file.'" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        if (explode('/', $value->type_file)[1] == 'pdf') {
+            $path = '<img src="/views/assets/img/pdf.jpeg" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        }
 
-		}
+        /*=============================================
+         * Capturar miniatura zip
+         * =============================================*/
 
-		/*=============================================
-		Capturar miniatura audio
-		=============================================*/
+        if (explode('/', $value->type_file)[1] == 'zip') {
+            $path = '<img src="/views/assets/img/zip.jpg" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+        }
 
-		if(explode("/",$value->type_file)[0] == "audio"){
+        return $path;
+    }
 
-			$path = '<img src="/views/assets/img/multimedia.png" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
+    /*=============================================
+     * Devuelva la miniatura de la cuadrícula
+     * =============================================*/
 
-		}
+    public static function returnThumbnailGrid($value)
+    {
+        /*=============================================
+         * Capturar miniatura imagen
+         * =============================================*/
 
-		/*=============================================
-		Capturar miniatura pdf
-		=============================================*/
+        if (explode('/', $value->type_file)[0] == 'image') {
+            $path = '<img src="' . $value->link_file . '" class="rounded card-img-top w-100">';
+        }
 
-		if(explode("/",$value->type_file)[1] == "pdf"){
+        /*=============================================
+         * Capturar miniatura video
+         * =============================================*/
 
-			$path = '<img src="/views/assets/img/pdf.jpeg" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
-		}
-
-		/*=============================================
-		Capturar miniatura zip
-		=============================================*/
-
-		if(explode("/",$value->type_file)[1] == "zip"){
-
-			$path = '<img src="/views/assets/img/zip.jpg" class="rounded" style="width:100px; height:100px; object-fit: cover; object-position: center;">';
-		}
-
-		return $path;
-	}
-
-	/*=============================================
-	Devuelva la miniatura de la cuadrícula
-	=============================================*/
-
-	static public function returnThumbnailGrid($value){
-
-		/*=============================================
-		Capturar miniatura imagen
-		=============================================*/
-
-		if(explode("/",$value->type_file)[0] == "image"){
-
-			$path = '<img src="'.$value->link_file.'" class="rounded card-img-top w-100">';
-
-		}
-
-		/*=============================================
-		Capturar miniatura video
-		=============================================*/
-
-		if(explode("/",$value->type_file)[0] == "video" && $value->id_folder_file != 4){
-
-			if(explode("/",$value->type_file)[1] == "mp4"){
-
-				$path = '<video class="rounded card-img-top w-100">
-					<source src="'.$value->link_file.'" type="'.$value->type_file.'">
+        if (explode('/', $value->type_file)[0] == 'video' && $value->id_folder_file != 4) {
+            if (explode('/', $value->type_file)[1] == 'mp4') {
+                $path = '<video class="rounded card-img-top w-100">
+					<source src="' . $value->link_file . '" type="' . $value->type_file . '">
 				</video>';
+            } else {
+                $path = '<img src="/views/assets/img/multimedia.png" class="rounded card-img-top w-100">';
+            }
+        }
 
-			}else{
+        if (explode('/', $value->type_file)[0] == 'video' && $value->id_folder_file == 4) {
+            $path = '<img src="' . $value->thumbnail_vimeo_file . '" class="rounded card-img-top w-100">';
+        }
 
-				$path = '<img src="/views/assets/img/multimedia.png" class="rounded card-img-top w-100">';
-			}
+        /*=============================================
+         * Capturar miniatura audio
+         * =============================================*/
 
-		}
+        if (explode('/', $value->type_file)[0] == 'audio') {
+            $path = '<img src="/views/assets/img/multimedia.png" class="rounded card-img-top w-100">';
+        }
 
-		if(explode("/",$value->type_file)[0] == "video" && $value->id_folder_file == 4){
+        /*=============================================
+         * Capturar miniatura pdf
+         * =============================================*/
 
-			$path = '<img src="'.$value->thumbnail_vimeo_file.'" class="rounded card-img-top w-100">';
-			
-		}
+        if (explode('/', $value->type_file)[1] == 'pdf') {
+            $path = '<img src="/views/assets/img/pdf.jpeg" class="rounded card-img-top w-100">';
+        }
 
-		/*=============================================
-		Capturar miniatura audio
-		=============================================*/
+        /*=============================================
+         * Capturar miniatura zip
+         * =============================================*/
 
-		if(explode("/",$value->type_file)[0] == "audio"){
+        if (explode('/', $value->type_file)[1] == 'zip') {
+            $path = '<img src="/views/assets/img/zip.jpg" class="rounded card-img-top w-100">';
+        }
 
-			$path = '<img src="/views/assets/img/multimedia.png" class="rounded card-img-top w-100">';
+        return $path;
+    }
 
-		}
+    /*=============================================
+     * Función para generar códigos alfanuméricos aleatorios
+     * =============================================*/
 
-		/*=============================================
-		Capturar miniatura pdf
-		=============================================*/
+    public static function genPassword($length)
+    {
+        $password = '';
+        $chain = '0123456789abcdefghijklmnopqrstuvwxyz';
 
- 		if(explode("/",$value->type_file)[1] == "pdf"){
+        $password = substr(str_shuffle($chain), 0, $length);
 
- 			$path = '<img src="/views/assets/img/pdf.jpeg" class="rounded card-img-top w-100">';
- 		}
+        return $password;
+    }
 
- 		/*=============================================
-		Capturar miniatura zip
-		=============================================*/
+    /*=============================================
+     * Función para enviar correos electrónicos
+     * =============================================*/
 
- 		if(explode("/",$value->type_file)[1] == "zip"){
+    public static function sendEmail($subject, $email, $title, $message, $link)
+    {
+        date_default_timezone_set('America/Bogota');
 
- 			$path = '<img src="/views/assets/img/zip.jpg" class="rounded card-img-top w-100">';
- 		}
-	 		
-		return $path;
-	}
+        $mail = new PHPMailer();
 
-	/*=============================================
-	Función para generar códigos alfanuméricos aleatorios
-	=============================================*/
+        $mail->CharSet = 'utf-8';
+        //$mail->Encoding = 'base64'; //Habilitar al subir el sistema a un hosting
 
-	static public function genPassword($length){
+        $mail->isMail();
 
-		$password = "";
-		$chain = "0123456789abcdefghijklmnopqrstuvwxyz";
+        $mail->UseSendmailOptions = 0;
 
-		$password = substr(str_shuffle($chain),0,$length);
+        $mail->setFrom('noreply@dashboard.com', 'CMS-BUILDER');
 
-		return $password;
-	}
+        $mail->Subject = $subject;
 
-	/*=============================================
-	Función para enviar correos electrónicos
-	=============================================*/
+        $mail->addAddress($email);
 
-	static public function sendEmail($subject, $email, $title, $message, $link){
-
-		date_default_timezone_set("America/Bogota");
-
-		$mail = new PHPMailer;
-
-		$mail->CharSet = 'utf-8';
-		//$mail->Encoding = 'base64'; //Habilitar al subir el sistema a un hosting
-
-		$mail->isMail();
-
-		$mail->UseSendmailOptions = 0;
-
-		$mail->setFrom("noreply@dashboard.com","CMS-BUILDER");
-
-		$mail->Subject = $subject;
-
-		$mail->addAddress($email);
-
-		$mail->msgHTML('
+        $mail->msgHTML(
+            '
 
 			<div style="width:100%; background:#eee; position:relative; font-family:sans-serif; padding-top:40px; padding-bottom: 40px;">
 	
@@ -332,13 +293,19 @@ class TemplateController{
 					
 					<center>
 						
-						<h3 style="font-weight:100; color:#999">'.$title.'</h3>
+						<h3 style="font-weight:100; color:#999">'
+            . $title
+            . '</h3>
 
 						<hr style="border:1px solid #ccc; width:80%">
 
-						'.$message.'
+						'
+            . $message
+            . '
 
-						<a href="'.$link.'" target="_blank" style="text-decoration: none; mrgin-top:10px">
+						<a href="'
+            . $link
+            . '" target="_blank" style="text-decoration: none; mrgin-top:10px">
 
 							<div style="line-height:25px; background:#000; width:60%; padding:10px; color:white; border-radius:5px">Haz clic aquí</div>
 
@@ -354,22 +321,16 @@ class TemplateController{
 
 			</div>	
 
-		 ');
+		 ',
+        );
 
-		$send = $mail->Send();
+        $send = $mail->Send();
 
-		if(!$send){
-
-			return $mail->ErrorInfo;	
-		
-		}else{
-
-			return "ok";
-
-		}
-
-	}
-
+        if (!$send) {
+            return $mail->ErrorInfo;
+        } else {
+            return 'ok';
+        }
+    }
 }
 
-?>
